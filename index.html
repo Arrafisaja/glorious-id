@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Glorious.ID - Topup Game</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <img src="assets/logo.png" alt="Logo Glorious.ID">
+      <h1>Selamat Datang di Glorious.ID</h1>
+    </div>
+  </header>
+
+  <div id="catalog"></div>
+
+  <div id="orderForm" style="display:none;">
+    <h2>Formulir Pembelian</h2>
+    <form id="form" enctype="multipart/form-data">
+      <input type="hidden" name="game_type" id="game_type">
+      <label>ID Game:</label><input type="text" name="user_id" required><br>
+      <label>No. WA:</label><input type="text" name="wa_number" required><br>
+      <label>Nickname:</label><input type="text" name="nickname" required><br>
+      <label>Pilih Metode Pembayaran:</label><br>
+      <input type="radio" name="payment_method" value="ShopeePay" required> ShopeePay<br>
+      <input type="radio" name="payment_method" value="DANA"> DANA<br>
+      <div id="account_number"></div>
+      <label>Upload Bukti Pembayaran:</label>
+      <input type="file" name="payment_proof" accept="image/*" required><br>
+      <button type="submit">Lanjutkan</button>
+    </form>
+    <div id="thanks" style="display:none;">Terima kasih sudah membeli!</div>
+  </div>
+
+  <script>
+    // Load catalog
+    fetch('backend/get_catalog.php')
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('catalog');
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.innerHTML = `
+          <img src="uploads/${item.image}" width="150"><br>
+          <b>${item.game_name}</b><br>
+          Rp${item.price}<br>
+          <button onclick="buy('${item.game_name}')">Beli</button><hr>
+        `;
+        container.appendChild(card);
+      });
+    });
+
+    function buy(game) {
+      document.getElementById('orderForm').style.display = 'block';
+      document.getElementById('game_type').value = game;
+    }
+
+    document.querySelectorAll("input[name='payment_method']").forEach(input => {
+      input.addEventListener('change', function() {
+        const acc = this.value === "ShopeePay" ? "08123456789 (ShopeePay)" : "08987654321 (DANA)";
+        document.getElementById("account_number").innerText = "Kirim ke: " + acc;
+      });
+    });
+
+    document.getElementById('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('backend/submit_order.php', {
+        method: 'POST',
+        body: formData
+      }).then(res => res.text()).then(() => {
+        document.getElementById('form').reset();
+        document.getElementById('thanks').style.display = 'block';
+      });
+    });
+  </script>
+
+  <footer>
+    <p>&copy; 2025 Glorious.ID - Topup Game Murah & Cepat</p>
+  </footer>
+</body>
+</html>
